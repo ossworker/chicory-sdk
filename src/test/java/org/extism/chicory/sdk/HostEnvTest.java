@@ -1,12 +1,17 @@
 package org.extism.chicory.sdk;
 
 import com.dylibso.chicory.log.SystemLogger;
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-public class HostEnvTest extends TestCase {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+
+public class HostEnvTest  {
+
+    @Test
     public void testShowcase() {
         var logger = new SystemLogger();
 

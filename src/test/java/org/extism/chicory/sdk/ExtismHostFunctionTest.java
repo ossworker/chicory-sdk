@@ -4,11 +4,12 @@ import com.dylibso.chicory.log.SystemLogger;
 import com.dylibso.chicory.runtime.HostFunction;
 import com.dylibso.chicory.runtime.Instance;
 import com.dylibso.chicory.wasm.types.Value;
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-public class ExtismHostFunctionTest extends TestCase {
+public class ExtismHostFunctionTest  {
+    @Test
     public void testFunction() {
         var f = ExtismHostFunction.of("myfunc", List.of(), List.of(),
                 (CurrentPlugin p, Value... args) -> {

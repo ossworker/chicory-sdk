@@ -2,16 +2,21 @@ package org.extism.chicory.sdk;
 
 import com.dylibso.chicory.log.SystemLogger;
 import com.dylibso.chicory.runtime.Instance;
-import com.dylibso.chicory.wasi.WasiPreview1;
 import com.dylibso.chicory.runtime.Module;
+import com.dylibso.chicory.wasi.WasiPreview1;
 import com.dylibso.chicory.wasm.types.Value;
-import junit.framework.TestCase;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-public class DependencyGraphTest extends TestCase {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
+public class DependencyGraphTest {
+
+    @Test
     public void testCircularDeps() throws IOException {
         InputStream is1 = this.getClass().getResourceAsStream("/circular-import/circular-import-1.wasm");
         InputStream is2 = this.getClass().getResourceAsStream("/circular-import/circular-import-2.wasm");
@@ -29,7 +34,7 @@ public class DependencyGraphTest extends TestCase {
         assertEquals(60, result[0].asInt());
     }
 
-
+    @Test
     public void testCircularDepsMore() throws IOException {
         InputStream addBytes = this.getClass().getResourceAsStream("/circular-import-more/circular-import-add.wasm");
         InputStream subBytes = this.getClass().getResourceAsStream("/circular-import-more/circular-import-sub.wasm");
@@ -71,6 +76,7 @@ public class DependencyGraphTest extends TestCase {
         }
     }
 
+    @Test
     public void testHostFunctionDeps() throws IOException {
         InputStream requireWasi = this.getClass().getResourceAsStream("/host-functions/import-wasi.wasm");
         Module requireWasiM = parse(requireWasi);
@@ -85,6 +91,7 @@ public class DependencyGraphTest extends TestCase {
         assertNotNull(mainInst);
     }
 
+    @Test
     public void testInstantiate() throws IOException {
         InputStream requireWasi = this.getClass().getResourceAsStream("/host-functions/import-wasi.wasm");
         Module requireWasiM = parse(requireWasi);
@@ -95,7 +102,7 @@ public class DependencyGraphTest extends TestCase {
 
         Instance mainInst = dg.instantiate();
         Instance mainInst2 = dg.instantiate();
-        assertSame("when invoked twice, instantiate() returns the same instance", mainInst, mainInst2);
+        assertSame(mainInst, mainInst2, "when invoked twice, instantiate() returns the same instance");
     }
 
     private Module parse(InputStream is1) throws IOException {

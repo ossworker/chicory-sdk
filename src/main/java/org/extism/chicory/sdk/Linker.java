@@ -41,25 +41,36 @@ class Linker {
 
         // Register the WASI host functions.
         dg.registerFunctions(new WasiPreview1(logger,
-                WasiOptions.builder()
-                        .withArguments(List.of("main"))
-                        .withStdout(System.out)
-                        .withStderr(System.err)
-                        .build()).toHostFunctions());
+                                              WasiOptions.builder()
+                                                      .withArguments(List.of("main"))
+                                                      .withStdout(System.out)
+                                                      .withStderr(System.err)
+                                                      .build()).toHostFunctions());
+
+        // http
+        ExtismHostFunction[] httpExtismFunctions = HttpHostFunction.newHttpHostFunctions(manifest);
+        dg.registerFunctions(Arrays.stream(httpExtismFunctions)
+                                     .map(ExtismHostFunction::asHostFunction)
+                                     .toArray(HostFunction[]::new));
+
 
         // Register the user-provided host functions.
         dg.registerFunctions(Arrays.stream(this.hostFunctions)
-                .map(ExtismHostFunction::asHostFunction)
-                .toArray(HostFunction[]::new));
+                                     .map(ExtismHostFunction::asHostFunction)
+                                     .toArray(HostFunction[]::new));
 
         // Register all the modules declared in the manifest.
         dg.registerModules(manifest.wasms);
 
         // Instantiate the main module, and, recursively, all of its dependencies.
         Instance main = dg.instantiate();
-    
+
         Plugin p = new Plugin(main, hostEnv);
         CurrentPlugin curr = new CurrentPlugin(p);
+
+        for (ExtismHostFunction fn : httpExtismFunctions) {
+            fn.bind(curr);
+        }
 
         // Bind all host functions to a CurrentPlugin wrapper for this Plugin.
         for (ExtismHostFunction fn : this.hostFunctions) {

@@ -1,11 +1,16 @@
 package org.extism.chicory.sdk;
 
-import junit.framework.TestCase;
+
+
+import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 
-public class PluginTest extends TestCase {
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+public class PluginTest {
+
+    @Test
     public void testGreet() {
         var manifest =
                 Manifest.ofWasms(
@@ -18,6 +23,7 @@ public class PluginTest extends TestCase {
         assertEquals("Hello, Benjamin!", result);
     }
 
+    @Test
     public void testGreetAoT() {
         var manifest =
                 Manifest.ofWasms(
