@@ -2,6 +2,7 @@ package org.extism.chicory.sdk;
 
 import com.dylibso.chicory.log.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 
 public class Slf4jWasmLogger implements Logger {
 
@@ -9,7 +10,6 @@ public class Slf4jWasmLogger implements Logger {
 
     @Override
     public void log(Level level, String msg, Throwable throwable) {
-
         LOGGER.atLevel(toSlf4jLogLevel(level)).setCause(throwable).log(()->msg);
     }
 
@@ -22,7 +22,7 @@ public class Slf4jWasmLogger implements Logger {
     org.slf4j.event.Level toSlf4jLogLevel(Level level) {
         switch (level) {
             case ALL:
-                return org.slf4j.event.Level.DEBUG;
+                return org.slf4j.event.Level.TRACE;
             case TRACE:
                 return org.slf4j.event.Level.TRACE;
             case DEBUG:

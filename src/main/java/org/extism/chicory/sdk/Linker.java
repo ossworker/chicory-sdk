@@ -39,6 +39,7 @@ class Linker {
         var hostEnv = new HostEnv(new Kernel(), config, logger);
         dg.registerFunctions(hostEnv.toHostFunctions());
 
+
         // Register the WASI host functions.
         dg.registerFunctions(new WasiPreview1(logger,
                                               WasiOptions.builder()
@@ -48,8 +49,8 @@ class Linker {
                                                       .build()).toHostFunctions());
 
         // http
-        ExtismHostFunction[] httpExtismFunctions = HttpHostFunction.newHttpHostFunctions(manifest);
-        dg.registerFunctions(Arrays.stream(httpExtismFunctions)
+        ExtismHostFunction[] customExtismFunctions = CustomHostFunction.newHostFunctions(manifest,logger);
+        dg.registerFunctions(Arrays.stream(customExtismFunctions)
                                      .map(ExtismHostFunction::asHostFunction)
                                      .toArray(HostFunction[]::new));
 
@@ -68,7 +69,7 @@ class Linker {
         Plugin p = new Plugin(main, hostEnv);
         CurrentPlugin curr = new CurrentPlugin(p);
 
-        for (ExtismHostFunction fn : httpExtismFunctions) {
+        for (ExtismHostFunction fn : customExtismFunctions) {
             fn.bind(curr);
         }
 

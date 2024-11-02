@@ -1,18 +1,14 @@
 package org.extism.chicory.sdk;
 
-import com.dylibso.chicory.runtime.HostFunction;
 import com.dylibso.chicory.runtime.Memory;
 import com.dylibso.chicory.wasm.types.Value;
 import com.dylibso.chicory.wasm.types.ValueType;
-import okhttp3.OkHttpClient;
 import org.extism.chicory.sdk.http.HttpUtils;
 import org.junit.jupiter.api.Test;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,14 +36,26 @@ public class ExtismTest {
     void testAdd() {
         Manifest manifest = Manifest.ofWasms(ManifestWasm
                                                      .fromPath(
-                                                             "/Users/workoss/IDE/rustProjects/new-plugin/target/wasm32-unknown-unknown/release/rust_pdk_template.wasm")
+                                                             "/Users/workoss/IDE/rustProjects/new-plugin/target/wasm32-wasip1/release/rust_pdk_template.wasm")
                                                      .build())
                 .withOptions(new Manifest.Options().withAoT())
                 .build();
+
+        long start = Instant.now().toEpochMilli();
         Plugin plugin = Plugin.ofManifest(manifest)
+                .withHostFunctions(loadHostData())
+                .withLogger(new Slf4jWasmLogger())
                 .build();
-        byte[] bytes = plugin.call("add", "{\"left\":12,\"right\":3}".getBytes(StandardCharsets.UTF_8));
-        System.out.println(new String(bytes, StandardCharsets.UTF_8));
+
+        for (int i = 0; i < 20; i++) {
+
+            byte[] bytes = plugin.call("add", "{\"left\":12,\"right\":3}".getBytes(StandardCharsets.UTF_8));
+            System.out.println(new String(bytes, StandardCharsets.UTF_8));
+        }
+        long end = Instant.now().toEpochMilli();
+        System.out.println("cost:"+(end-start)+"ms avg:"+(end-start)/10+"ms");
+
+
 
     }
 
@@ -56,6 +64,7 @@ public class ExtismTest {
 
     @Test
     void testHttp() {
+        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel","debug");
         Manifest manifest = Manifest.ofWasms(ManifestWasm
                                                      .fromPath(
                                                              "/Users/workoss/IDE/rustProjects/new-plugin/target/wasm32-wasip1/release/rust_pdk_template.wasm")
@@ -69,49 +78,33 @@ public class ExtismTest {
 
         long start = Instant.now().toEpochMilli();
 
+        Plugin plugin = Plugin.ofManifest(manifest)
+                .withHostFunctions(loadHostData())
+                .withLogger(new Slf4jWasmLogger())
+                .build();
+
         for (int i = 0; i < 20; i++) {
-            runHttp(manifest,i+1);
+//            runHttp(manifest,i+1);
+            runHttp(plugin,i+1);
         }
         long end = Instant.now().toEpochMilli();
-        System.out.println("cost:"+(end-start)+"ms avg:"+(end-start)/10+"ms");
+        System.out.println("cost:"+(end-start)+"ms avg:"+(end-start)/20+"ms");
 
     }
 
+    private void runHttp(Plugin plugin,int i){
+//        byte[] bytes = plugin.call("http_post_resp",
+//                                   ("{\"url\": \"https://httpbin.org/post\", \"headers\":{\"x-gray\":\"1.0\"},\"method\": \"POST\",\"data\":\"{\\\"id\\\":\\\"中国china" + i + "\\\"}\"}").getBytes(
+//                                           StandardCharsets.UTF_8));
+        byte[] bytes = plugin.call("http_get_resp",
+                                   ("{\"url\": \"https://www.baidu.com\", \"headers\":{\"x-gray\":\"1.0\"},\"method\": \"GET\"}").getBytes(
+                                           StandardCharsets.UTF_8));
+        System.out.println(new String(bytes, StandardCharsets.UTF_8));
+    }
+
     private void runHttp(Manifest manifest,int i){
-        ExtismHostFunction hostFunction = ExtismHostFunction.of("load_host_data",
-                                                                List.of(ValueType.I64),
-                                                                List.of(ValueType.I64),
-                                                                (currentPlugin, values) -> {
-                                                                    for (Value value : values) {
-                                                                        System.out.println(value);
-                                                                    }
-                                                                    long anInt = values[0].asLong();
-                                                                    System.out.println("---" + anInt);
-
-                                                                    Memory memory = currentPlugin.memory().memory();
-                                                                    String input = memory.readCString((int) anInt);
-                                                                    System.out.println("input:" + input);
-
-                                                                    String inString = "测试中文wor中愛";
-                                                                    long ptr = currentPlugin.memory()
-                                                                            .alloc(inString.length() + 2L * countChineseCharacters(
-                                                                                    inString));
-                                                                    byte[] bytes = inString.getBytes(
-                                                                            StandardCharsets.UTF_8);
-                                                                    System.out.println(bytes);
-                                                                    memory.writeCString((int) ptr, inString,
-                                                                                        StandardCharsets.UTF_8);
-
-                                                                    System.out.println("ptr:" + ptr);
-                                                                    String hostOut = memory.readCString((int) ptr,
-                                                                                                        StandardCharsets.UTF_8);
-                                                                    System.out.println("hostOut:" + hostOut);
-                                                                    return new Value[]{Value.i64(ptr)};
-                                                                });
-
-
         Plugin plugin = Plugin.ofManifest(manifest)
-                .withHostFunctions(hostFunction)
+                .withHostFunctions(loadHostData())
                 .withLogger(new Slf4jWasmLogger())
                 .build();
 
@@ -122,6 +115,40 @@ public class ExtismTest {
                                    ("{\"url\": \"https://www.baidu.com\", \"headers\":{\"x-gray\":\"1.0\"},\"method\": \"GET\"}").getBytes(
                                            StandardCharsets.UTF_8));
         System.out.println(new String(bytes, StandardCharsets.UTF_8));
+    }
+
+
+    private ExtismHostFunction loadHostData(){
+        return ExtismHostFunction.of("load_host_data",
+                                     List.of(ValueType.I64),
+                                     List.of(ValueType.I64),
+                                     (currentPlugin, values) -> {
+                                         for (Value value : values) {
+                                             System.out.println(value);
+                                         }
+                                         long anInt = values[0].asLong();
+                                         System.out.println("---" + anInt);
+
+                                         Memory memory = currentPlugin.memory().memory();
+                                         String input = memory.readCString((int) anInt);
+                                         System.out.println("input:" + input);
+
+                                         String inString = "测试中文wor中愛";
+                                         long ptr = currentPlugin.memory()
+                                                 .alloc(inString.length() + 2L * countChineseCharacters(
+                                                         inString));
+                                         byte[] bytes = inString.getBytes(
+                                                 StandardCharsets.UTF_8);
+                                         System.out.println(bytes);
+                                         memory.writeCString((int) ptr, inString,
+                                                             StandardCharsets.UTF_8);
+
+                                         System.out.println("ptr:" + ptr);
+                                         String hostOut = memory.readCString((int) ptr,
+                                                                             StandardCharsets.UTF_8);
+                                         System.out.println("hostOut:" + hostOut);
+                                         return new Value[]{Value.i64(ptr)};
+                                     });
     }
 
 

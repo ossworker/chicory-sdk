@@ -2,8 +2,31 @@ package org.extism.chicory.sdk;
 
 import com.dylibso.chicory.log.Logger;
 
+/**
+ * @author workoss
+ */
+
 public enum LogLevel {
-    TRACE, DEBUG, INFO, WARN, ERROR;
+    /**
+     * trace
+     */
+    TRACE,
+    /**
+     * debug
+     */
+    DEBUG,
+    /**
+     * info
+     */
+    INFO,
+    /**
+     * warn
+     */
+    WARN,
+    /**
+     * error
+     */
+    ERROR;
 
     Logger.Level toChicoryLogLevel() {
         switch (this) {
@@ -17,8 +40,9 @@ public enum LogLevel {
                 return Logger.Level.WARNING;
             case ERROR:
                 return Logger.Level.ERROR;
+            default:
+                throw new IllegalArgumentException("unknown type " + this);
         }
-        throw new IllegalArgumentException("unknown type " + this);
     }
 }
 

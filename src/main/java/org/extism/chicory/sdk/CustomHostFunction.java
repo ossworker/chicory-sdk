@@ -1,6 +1,6 @@
 package org.extism.chicory.sdk;
 
-import com.dylibso.chicory.runtime.HostFunction;
+import com.dylibso.chicory.log.Logger;
 import com.dylibso.chicory.wasm.types.Value;
 import com.dylibso.chicory.wasm.types.ValueType;
 import com.google.common.net.MediaType;
@@ -9,16 +9,13 @@ import com.workoss.boot.util.collection.CollectionUtils;
 import com.workoss.boot.util.json.JsonMapper;
 import com.workoss.boot.util.reflect.ClassUtils;
 import okhttp3.Response;
-import org.extism.chicory.sdk.http.HttpException;
 import org.extism.chicory.sdk.http.HttpUtils;
 import org.extism.chicory.sdk.http.ManifestHttpRequest;
 import org.extism.chicory.sdk.http.ManifestHttpResponse;
 import org.extism.chicory.sdk.http.okhttp3.OkHttpUtil;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URL;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpResponse;
 import java.time.Duration;
@@ -29,26 +26,20 @@ import java.util.stream.Collectors;
 
 import static org.extism.chicory.sdk.Kernel.IMPORT_MODULE_NAME;
 
-public class HttpHostFunction {
+public class CustomHostFunction {
 
     private static final Lazy<Boolean> CHECK_OKHTTP = Lazy.of(
-            () -> ClassUtils.isPresent("okhttp3.OkHttpClient", HttpHostFunction.class.getClassLoader()));
+            () -> ClassUtils.isPresent("okhttp3.OkHttpClient", CustomHostFunction.class.getClassLoader()));
 
-    public static ExtismHostFunction[] newHttpHostFunctions(Manifest manifest) {
+    public static ExtismHostFunction[] newHostFunctions(Manifest manifest,Logger logger) {
         ManifestHttpResponse lastResp = new ManifestHttpResponse(200, Map.of(), new byte[]{});
         return new ExtismHostFunction[]{toHttpRequestFun(manifest,lastResp),
                 toHttpStatusCodeFun(lastResp),
-                toHttpHeaderFun(lastResp)
+                toHttpHeaderFun(lastResp),
+                toGetLoggerLevel(logger)
         };
     }
 
-    public static HostFunction[] newHostFunctions(Manifest manifest) {
-        ManifestHttpResponse lastResp = new ManifestHttpResponse(200, Map.of(), new byte[]{});
-        return new HostFunction[]{toHttpRequestFun(manifest,lastResp).asHostFunction(),
-                toHttpStatusCodeFun(lastResp).asHostFunction(),
-                toHttpHeaderFun(lastResp).asHostFunction()
-        };
-    }
 
     static ExtismHostFunction toHttpStatusCodeFun(ManifestHttpResponse lastResp) {
         return ExtismHostFunction.of(IMPORT_MODULE_NAME, "http_status_code", (currentPlugin, values) -> {
@@ -85,22 +76,34 @@ public class HttpHostFunction {
                                      List.of(ValueType.I64));
     }
 
-    static ExtismHostFunction toHttpHeaderFun(ManifestHttpResponse lastResp) {
-        return ExtismHostFunction.of(IMPORT_MODULE_NAME, "http_headers", (currentPlugin, values) -> {
-                                         Map<String, String> headers = Optional.ofNullable(lastResp)
-                                                 .map(ManifestHttpResponse::getHeader)
-                                                 .orElse(Map.of());
-                                         long ptr = currentPlugin.memory()
-                                                 .writeBytes(JsonMapper.toJSONBytes(headers));
-                                         return new Value[]{Value.i64(ptr)};
-                                     },
+    static ExtismHostFunction toGetLoggerLevel(Logger logger) {
+        return ExtismHostFunction.of(IMPORT_MODULE_NAME, "get_log_level", (currentPlugin, values) ->
+                                             new Value[]{Value.i32(getLogLevel(logger))},
                                      List.of(),
-                                     List.of(ValueType.I64));
+                                     List.of(ValueType.I32));
+    }
+
+    static int getLogLevel(Logger logger){
+        int levelNum = 0;
+        if (logger == null) {
+            return levelNum;
+        }
+        for (Logger.Level level : Logger.Level.values()) {
+            if (level.getSeverity() < 0) {
+                continue;
+            }
+            if (logger.isLoggable(level)){
+                return levelNum;
+            }
+            levelNum++;
+
+        }
+        return levelNum;
     }
 
 
     static ManifestHttpResponse httpRequest(Manifest manifest,ManifestHttpRequest request, byte[] body) {
-        //TODO 域名拦截
+        // 域名拦截
         boolean checkDomain = Optional.ofNullable(manifest.getAllowHosts()).orElse(List.of())
                 .stream().anyMatch(allowHost -> URI.create(request.getUrl()).getHost().equalsIgnoreCase(allowHost));
         if (!checkDomain) {
@@ -136,5 +139,17 @@ public class HttpHostFunction {
         return new ManifestHttpResponse(response.statusCode(), respHeader, HttpUtils.handleResponse(response));
     }
 
+    static ExtismHostFunction toHttpHeaderFun(ManifestHttpResponse lastResp) {
+        return ExtismHostFunction.of(IMPORT_MODULE_NAME, "http_headers", (currentPlugin, values) -> {
+                                         Map<String, String> headers = Optional.ofNullable(lastResp)
+                                                 .map(ManifestHttpResponse::getHeader)
+                                                 .orElse(Map.of());
+                                         long ptr = currentPlugin.memory()
+                                                 .writeBytes(JsonMapper.toJSONBytes(headers));
+                                         return new Value[]{Value.i64(ptr)};
+                                     },
+                                     List.of(),
+                                     List.of(ValueType.I64));
+    }
 
 }
