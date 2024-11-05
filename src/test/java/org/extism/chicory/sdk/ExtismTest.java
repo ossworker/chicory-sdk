@@ -123,10 +123,7 @@ public class ExtismTest {
                                      List.of(ValueType.I64),
                                      List.of(ValueType.I64),
                                      (currentPlugin, values) -> {
-                                         for (Value value : values) {
-                                             System.out.println(value);
-                                         }
-                                         long anInt = values[0].asLong();
+                                         long anInt = values[0];
                                          System.out.println("---" + anInt);
 
                                          Memory memory = currentPlugin.memory().memory();
@@ -147,7 +144,7 @@ public class ExtismTest {
                                          String hostOut = memory.readCString((int) ptr,
                                                                              StandardCharsets.UTF_8);
                                          System.out.println("hostOut:" + hostOut);
-                                         return new Value[]{Value.i64(ptr)};
+                                         return new long[]{ptr};
                                      });
     }
 

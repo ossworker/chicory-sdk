@@ -5,7 +5,7 @@
 
   <groupId>org.extism</groupId>
   <artifactId>chicory-sdk</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>chicory-sdk</name>
@@ -19,7 +19,7 @@
     <maven.compiler.target>11</maven.compiler.target>
     <maven.compiler.release>11</maven.compiler.release>
 
-    <chicory.version>0.0.12</chicory.version>
+    <chicory.version>1.0.0-M1</chicory.version>
   </properties>
 
   <dependencies>
@@ -35,7 +35,7 @@
     </dependency>
     <dependency>
       <groupId>com.dylibso.chicory</groupId>
-      <artifactId>aot</artifactId>
+      <artifactId>aot-experimental</artifactId>
       <version>${chicory.version}</version>
     </dependency>
     <dependency>
@@ -50,6 +50,13 @@
       <artifactId>boot-util</artifactId>
       <version>2023.2.1-SNAPSHOT</version>
     </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>33.3.1-jre</version>
+    </dependency>
+
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
@@ -63,6 +70,11 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>io.projectreactor.addons</groupId>
+      <artifactId>reactor-pool</artifactId>
+      <version>1.0.8</version>
+    </dependency>
 
 
     <dependency>

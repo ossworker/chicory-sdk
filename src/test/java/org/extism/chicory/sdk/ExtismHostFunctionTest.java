@@ -12,7 +12,7 @@ public class ExtismHostFunctionTest  {
     @Test
     public void testFunction() {
         var f = ExtismHostFunction.of("myfunc", List.of(), List.of(),
-                (CurrentPlugin p, Value... args) -> {
+                (CurrentPlugin p, long... args) -> {
                     p.log().log(LogLevel.INFO, "hello world");
                     return null;
         });
@@ -27,7 +27,7 @@ public class ExtismHostFunctionTest  {
         HostFunction hostFunction = f.asHostFunction();
         f.bind(new CurrentPlugin(plugin));
         Instance instance = null;
-        Value[] args = null;
+        long[] args = null;
         hostFunction.handle().apply(instance, args);
     }
 }

@@ -1,6 +1,5 @@
 package org.extism.chicory.sdk.http.okhttp3;
 
-import com.google.common.net.MediaType;
 import com.workoss.boot.util.StreamUtils;
 import com.workoss.boot.util.StringUtils;
 import com.workoss.boot.util.collection.CollectionUtils;
@@ -11,6 +10,7 @@ import okhttp3.Callback;
 import okhttp3.CookieJar;
 import okhttp3.Headers;
 import okhttp3.Interceptor;
+import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -30,7 +30,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.http.HttpResponse;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -47,6 +46,11 @@ public class OkHttpUtil {
     public static final Charset CHARSET = StandardCharsets.UTF_8;
     private static final Logger log = LoggerFactory.getLogger(OkHttpUtil.class);
     private static final OkHttpClient.Builder BUILD = new OkHttpClient.Builder();
+
+    public static MediaType XML_UTF_8 = MediaType.parse("text/xml; charset=utf-8");
+    public static MediaType JSON_UTF_8 = MediaType.parse("application/json; charset=utf-8");
+    public static MediaType PLAIN_TEXT_UTF_8 = MediaType.parse("text/plain; charset=utf-8");
+
 
     private static OkHttpClient client;
 
@@ -192,8 +196,9 @@ public class OkHttpUtil {
 
     public static Response postJSONResponse(String url, Map<String, String> uriVariables, Map<String, String> headers,
                                             Object jsonObject) throws IOException {
-        Response response = post(url, uriVariables, headers, MediaType.JSON_UTF_8,
-                                 formatterParams(jsonObject, MediaType.JSON_UTF_8));
+
+        Response response = post(url, uriVariables, headers, JSON_UTF_8,
+                                 formatterParams(jsonObject, JSON_UTF_8));
         if (response != null && response.body() != null) {
             return response;
         }
@@ -207,8 +212,8 @@ public class OkHttpUtil {
 
     public static void postJSON(String url, Map<String, String> uriVariables, Map<String, String> headers,
                                 Object jsonObject, Callback callback) throws IOException {
-        InputStream inputStream = formatterParams(jsonObject, MediaType.JSON_UTF_8);
-        post(url, uriVariables, headers, MediaType.JSON_UTF_8, inputStream, callback);
+        InputStream inputStream = formatterParams(jsonObject, JSON_UTF_8);
+        post(url, uriVariables, headers, JSON_UTF_8, inputStream, callback);
     }
 
     public static String postJSON(String url, Map<String, String> uriVariables, Object jsonObject) throws IOException {
@@ -217,8 +222,8 @@ public class OkHttpUtil {
 
     public static String postJSON(String url, Map<String, String> uriVariables, Map<String, String> headers,
                                   Object jsonObject) throws IOException {
-        Response response = post(url, uriVariables, headers, MediaType.JSON_UTF_8,
-                                 formatterParams(jsonObject, MediaType.JSON_UTF_8));
+        Response response = post(url, uriVariables, headers, JSON_UTF_8,
+                                 formatterParams(jsonObject, JSON_UTF_8));
         if (response != null && response.body() != null) {
             return response.body().string();
         }
@@ -227,8 +232,9 @@ public class OkHttpUtil {
 
     public static String postXml(OkHttpClient client, String url, Map<String, String> uriVariables, Object xmlObject)
             throws IOException {
-        InputStream inputStream = formatterParams(xmlObject, MediaType.XML_UTF_8);
-        RequestBody requestBody = OkHttpUtil.generateRequestBody(MediaType.XML_UTF_8,xmlObject);
+
+        InputStream inputStream = formatterParams(xmlObject, XML_UTF_8);
+        RequestBody requestBody = OkHttpUtil.generateRequestBody(XML_UTF_8,xmlObject);
         Request request = new Request.Builder()
                 .url(buildUrl(url, uriVariables))
                 .post(requestBody)
@@ -245,9 +251,9 @@ public class OkHttpUtil {
             return new ByteArrayInputStream(null);
         }
         if (mediaType == null) {
-            mediaType = MediaType.PLAIN_TEXT_UTF_8;
+            mediaType = PLAIN_TEXT_UTF_8;
         }
-        Charset charset = mediaType.charset().or(CHARSET);
+        Charset charset = mediaType.charset(CHARSET);
         byte[] bytes = null;
         if (paramObject instanceof String) {
             bytes = ((String) paramObject).getBytes(charset);

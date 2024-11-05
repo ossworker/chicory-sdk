@@ -2,14 +2,15 @@ package org.extism.chicory.sdk;
 
 import com.dylibso.chicory.log.SystemLogger;
 import com.dylibso.chicory.runtime.Instance;
-import com.dylibso.chicory.runtime.Module;
 import com.dylibso.chicory.wasi.WasiPreview1;
-import com.dylibso.chicory.wasm.types.Value;
+import com.dylibso.chicory.wasm.Module;
+import com.dylibso.chicory.wasm.Parser;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
 
+import static com.dylibso.chicory.wasm.Parser.parse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -30,8 +31,8 @@ public class DependencyGraphTest {
 
         Instance main = dg.instantiate();
 
-        Value[] result = main.export("real_do_expr").apply();
-        assertEquals(60, result[0].asInt());
+        long[] result = main.export("real_do_expr").apply();
+        assertEquals(60, result[0]);
     }
 
     @Test
@@ -56,8 +57,8 @@ public class DependencyGraphTest {
 
             Instance mainInst = dg.instantiate();
 
-            Value[] result = mainInst.export("real_do_expr").apply();
-            assertEquals(60, result[0].asInt());
+            long[] result = mainInst.export("real_do_expr").apply();
+            assertEquals(60, result[0]);
         }
 
         // Let's try to register them in a different order:
@@ -71,8 +72,8 @@ public class DependencyGraphTest {
 
             Instance mainInst = dg.instantiate();
 
-            Value[] result = mainInst.export("real_do_expr").apply();
-            assertEquals(60, result[0].asInt());
+            long[] result = mainInst.export("real_do_expr").apply();
+            assertEquals(60, result[0]);
         }
     }
 
@@ -105,9 +106,6 @@ public class DependencyGraphTest {
         assertSame(mainInst, mainInst2, "when invoked twice, instantiate() returns the same instance");
     }
 
-    private Module parse(InputStream is1) throws IOException {
-        return Module.builder(is1.readAllBytes()).build();
-    }
 
     private WasiPreview1 wasiPreview1() {
         return new WasiPreview1(new SystemLogger());

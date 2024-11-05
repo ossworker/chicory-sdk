@@ -1,9 +1,7 @@
 package org.extism.chicory.sdk;
 
 import com.dylibso.chicory.log.Logger;
-import com.dylibso.chicory.wasm.types.Value;
 import com.dylibso.chicory.wasm.types.ValueType;
-import com.google.common.net.MediaType;
 import com.workoss.boot.util.Lazy;
 import com.workoss.boot.util.collection.CollectionUtils;
 import com.workoss.boot.util.json.JsonMapper;
@@ -46,7 +44,7 @@ public class CustomHostFunction {
                                          Integer statusCode = Optional.ofNullable(lastResp)
                                                  .map(ManifestHttpResponse::getStatusCode)
                                                  .orElse(200);
-                                         return new Value[]{Value.i32(statusCode)};
+                                         return new long[]{statusCode};
                                      },
                                      List.of(),
                                      List.of(ValueType.I32));
@@ -54,10 +52,10 @@ public class CustomHostFunction {
 
     static ExtismHostFunction toHttpRequestFun(Manifest manifest,ManifestHttpResponse lastResp) {
         return ExtismHostFunction.of(IMPORT_MODULE_NAME, "http_request", (currentPlugin, values) -> {
-                                         ManifestHttpRequest request = JsonMapper.parseObject(currentPlugin.memory().readBytes(values[0].asLong()),
+                                         ManifestHttpRequest request = JsonMapper.parseObject(currentPlugin.memory().readBytes(values[0]),
                                                                                               ManifestHttpRequest.class);
 
-                                         byte[] body = currentPlugin.memory().readBytes(values[1].asLong());
+                                         byte[] body = currentPlugin.memory().readBytes(values[1]);
                                          if (body == null) {
                                              body = new byte[0];
                                          }
@@ -68,7 +66,7 @@ public class CustomHostFunction {
                                          long ptr = currentPlugin.memory()
                                                  .writeBytes(response.getBody());
 
-                                         return new Value[]{Value.i64(ptr)};
+                                         return new long[]{ptr};
 
 
                                      },
@@ -78,7 +76,7 @@ public class CustomHostFunction {
 
     static ExtismHostFunction toGetLoggerLevel(Logger logger) {
         return ExtismHostFunction.of(IMPORT_MODULE_NAME, "get_log_level", (currentPlugin, values) ->
-                                             new Value[]{Value.i32(getLogLevel(logger))},
+                                             new long[]{getLogLevel(logger)},
                                      List.of(),
                                      List.of(ValueType.I32));
     }
@@ -113,7 +111,7 @@ public class CustomHostFunction {
         if (Boolean.TRUE.equals(CHECK_OKHTTP.get())) {
             try (Response response = OkHttpUtil.execute(request.getUrl(), null, request.getMethod(),
                                                         request.getHeaders(),
-                                                        MediaType.PLAIN_TEXT_UTF_8, body)) {
+                                                        OkHttpUtil.PLAIN_TEXT_UTF_8, body)) {
                 Map<String, String> headers = response.headers().toMultimap().entrySet().stream()
                         .collect(Collectors.toMap(Map.Entry::getKey, v -> {
                             List<String> value = v.getValue();
@@ -146,7 +144,7 @@ public class CustomHostFunction {
                                                  .orElse(Map.of());
                                          long ptr = currentPlugin.memory()
                                                  .writeBytes(JsonMapper.toJSONBytes(headers));
-                                         return new Value[]{Value.i64(ptr)};
+                                         return new long[]{ptr};
                                      },
                                      List.of(),
                                      List.of(ValueType.I64));
