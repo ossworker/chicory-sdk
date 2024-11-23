@@ -3,8 +3,7 @@ package org.extism.chicory.sdk;
 import com.dylibso.chicory.log.SystemLogger;
 import com.dylibso.chicory.runtime.Instance;
 import com.dylibso.chicory.wasi.WasiPreview1;
-import com.dylibso.chicory.wasm.Module;
-import com.dylibso.chicory.wasm.Parser;
+import com.dylibso.chicory.wasm.WasmModule;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -43,10 +42,10 @@ public class DependencyGraphTest {
         InputStream mainBytes = this.getClass().getResourceAsStream("/circular-import-more/circular-import-main.wasm");
 
 
-        Module add = parse(addBytes);
-        Module sub = parse(subBytes);
-        Module expr = parse(exprBytes);
-        Module main = parse(mainBytes);
+        WasmModule add = parse(addBytes);
+        WasmModule sub = parse(subBytes);
+        WasmModule expr = parse(exprBytes);
+        WasmModule main = parse(mainBytes);
 
         {
             DependencyGraph dg = new DependencyGraph(new SystemLogger());
@@ -80,7 +79,7 @@ public class DependencyGraphTest {
     @Test
     public void testHostFunctionDeps() throws IOException {
         InputStream requireWasi = this.getClass().getResourceAsStream("/host-functions/import-wasi.wasm");
-        Module requireWasiM = parse(requireWasi);
+        WasmModule requireWasiM = parse(requireWasi);
 
         DependencyGraph dg = new DependencyGraph(new SystemLogger());
         dg.registerFunctions(wasiPreview1().toHostFunctions());
@@ -95,7 +94,7 @@ public class DependencyGraphTest {
     @Test
     public void testInstantiate() throws IOException {
         InputStream requireWasi = this.getClass().getResourceAsStream("/host-functions/import-wasi.wasm");
-        Module requireWasiM = parse(requireWasi);
+        WasmModule requireWasiM = parse(requireWasi);
 
         DependencyGraph dg = new DependencyGraph(new SystemLogger());
         dg.registerFunctions(wasiPreview1().toHostFunctions());

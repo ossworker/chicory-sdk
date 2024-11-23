@@ -11,7 +11,7 @@ class ChicoryModule {
 
     static final boolean IS_NATIVE_IMAGE_AOT = Boolean.getBoolean("com.oracle.graalvm.isaot");
 
-    static com.dylibso.chicory.wasm.Module fromWasm(ManifestWasm m) {
+    static com.dylibso.chicory.wasm.WasmModule fromWasm(ManifestWasm m) {
         if (m instanceof ManifestWasmBytes) {
             ManifestWasmBytes mwb = (ManifestWasmBytes) m;
             return Parser.parse(mwb.bytes);
