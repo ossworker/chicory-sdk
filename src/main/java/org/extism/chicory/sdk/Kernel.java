@@ -75,6 +75,11 @@ public class Kernel {
         return instanceMemory.readBytes((int) ptr, (int) len);
     }
 
+    public String getError() {
+        long ptr = errorGet.apply()[0];
+        long len = length.apply(ptr)[0];
+        return instanceMemory.readString((int) ptr, (int) len);
+    }
 
     HostFunction[] toHostFunctions() {
         var hostFunctions = new HostFunction[20];

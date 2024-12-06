@@ -16,6 +16,7 @@ import com.dylibso.chicory.wasm.types.FunctionImport;
 import com.dylibso.chicory.wasm.types.FunctionType;
 import com.dylibso.chicory.wasm.types.Import;
 import com.dylibso.chicory.wasm.types.ImportSection;
+import com.dylibso.chicory.wasm.types.Value;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -227,7 +228,7 @@ class DependencyGraph {
 
         Instance instance =
                 ChicoryModule.instanceWithOptions(
-                                Instance.builder(m),this.options)
+                        Instance.builder(m),this.options)
                         .withImportValues(importValues)
                         .withStart(false)
                         .build();
